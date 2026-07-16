@@ -30,6 +30,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", Meta = (ClampMin = 0, ClampMax = 1))
 	float PostProcessWeight{0.0f};
 
+	// Exponential decay speed used to smooth the first person camera's vertical location to remove
+	// head bob from walk animations. Higher values track the camera socket more closely, 0 disables smoothing.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", Meta = (ClampMin = 0))
+	float FirstPersonLocationSmoothingSpeed{8.0f};
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State", Transient)
 	TObjectPtr<ACharacter> Character;
 
@@ -53,6 +58,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State", Transient)
 	FVector CameraLocation{ForceInit};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State", Transient)
+	FVector SmoothedFirstPersonLocation{ForceInit};
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State", Transient)
 	FRotator CameraRotation{ForceInit};
@@ -104,6 +112,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
 	void SetFieldOfViewOverride(float NewFieldOfView);
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
+	void SetFirstPersonLocationSmoothingSpeed(float NewFirstPersonLocationSmoothingSpeed);
 
 	float GetPostProcessWeight() const;
 
@@ -179,6 +190,11 @@ inline float UAlsCameraComponent::GetFieldOfViewOverride() const
 inline void UAlsCameraComponent::SetFieldOfViewOverride(const float NewFieldOfView)
 {
 	FieldOfViewOverride = FMath::Clamp(NewFieldOfView, 5.0f, 175.0f);
+}
+
+inline void UAlsCameraComponent::SetFirstPersonLocationSmoothingSpeed(const float NewFirstPersonLocationSmoothingSpeed)
+{
+	FirstPersonLocationSmoothingSpeed = NewFirstPersonLocationSmoothingSpeed;
 }
 
 inline float UAlsCameraComponent::GetPostProcessWeight() const

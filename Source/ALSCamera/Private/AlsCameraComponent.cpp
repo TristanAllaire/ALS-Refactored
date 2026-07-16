@@ -225,7 +225,24 @@ void UAlsCameraComponent::TickCamera(const float DeltaTime, bool bAllowLag)
 		PivotLagLocation = PivotTargetLocation;
 		PivotLocation = PivotTargetLocation;
 
-		CameraLocation = GetFirstPersonCameraLocation();
+		const auto TargetFirstPersonLocation{GetFirstPersonCameraLocation()};
+
+		if (bAllowLag && DeltaTime > UE_SMALL_NUMBER && FirstPersonLocationSmoothingSpeed > UE_SMALL_NUMBER)
+		{
+			// Track X/Y directly; smooth Z to remove vertical head bob from walk animation. UAlsMath::DamperExact()
+			// with a half life of ln(2) / Speed is equivalent to the exponential decay previously used here.
+			SmoothedFirstPersonLocation.X = TargetFirstPersonLocation.X;
+			SmoothedFirstPersonLocation.Y = TargetFirstPersonLocation.Y;
+			SmoothedFirstPersonLocation.Z = UAlsMath::DamperExact(
+				SmoothedFirstPersonLocation.Z, TargetFirstPersonLocation.Z, DeltaTime,
+				UE_LN2 / FirstPersonLocationSmoothingSpeed);
+		}
+		else
+		{
+			SmoothedFirstPersonLocation = TargetFirstPersonLocation;
+		}
+
+		CameraLocation = SmoothedFirstPersonLocation;
 		CameraRotation = CameraTargetRotation;
 
 		CameraFieldOfView = bOverrideFieldOfView ? FieldOfViewOverride : Settings->FirstPerson.FieldOfView;
